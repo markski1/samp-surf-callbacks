@@ -85,12 +85,12 @@ public ocb_CheckSurfers() {
 */
 ocb_HandleVehicleSurfing(i, auxInt) {
 	if (auxInt == INVALID_VEHICLE_ID) {
-		if (ocb_SurfType[i] == SURFING_VEHICLE && ocb_SurfID[i] != INVALID_VEHICLE_ID) {
+		if (ocb_SurfType[i] == SURFING_VEHICLE) {
 			CallLocalFunction("OnPlayerStopSurfingVehicle", "ii", i, ocb_SurfID[i]);
 			ocb_SurfID[i] = INVALID_VEHICLE_ID;
 		}
 	} else {
-		if (ocb_SurfType[i] == SURFING_NONE && ocb_SurfID[i] == INVALID_VEHICLE_ID) {
+		if (ocb_SurfType[i] == SURFING_NONE) {
 			CallLocalFunction("OnPlayerSurfVehicle", "ii", i, auxInt);
 			ocb_SurfID[i] = auxInt;
 			ocb_SurfType[i] = SURFING_VEHICLE;
@@ -98,7 +98,6 @@ ocb_HandleVehicleSurfing(i, auxInt) {
 		} else if (ocb_SurfType[i] == SURFING_VEHICLE && ocb_SurfID[i] != auxInt) {
 			CallLocalFunction("OnPlayerJumpVehicleToVehicle", "iii", i, ocb_SurfID[i], auxInt);
 			ocb_SurfID[i] = auxInt;
-			ocb_SurfType[i] = SURFING_VEHICLE;
 			return 1;
 		} else if (ocb_SurfType[i] == SURFING_OBJECT) {
 			CallLocalFunction("OnPlayerJumpObjectToVehicle", "iii", i, ocb_SurfID[i], auxInt);
@@ -107,12 +106,38 @@ ocb_HandleVehicleSurfing(i, auxInt) {
 			return 1;
 		}
 	}
+	return 0;
 }
 
+/*
+	ocb_HandleVehicleSurfing
+
+	Internal function to handle the case in which a player might be surfing an object.
+	Return 1 if a player is surfing an object, no matter if the state changed or not
+	To avoid setting their surf type to none
+*/
 ocb_HandleObjectSurfing(i, auxInt) {
 	if (auxInt == INVALID_OBJECT_ID) {
-		
+		if (ocb_SurfType[i] == SURFING_OBJECT) {
+			CallLocalFunction("OnPlayerStopSurfingObject", "ii", i, ocb_SurfID[i]);
+			ocb_SurfID[i] = INVALID_OBJECT_ID;
+		}
+	} else {
+		if (ocb_SurfType[i] == SURFING_NONE) {
+			CallLocalFunction("OnPlayerSurfObject", "ii", i, auxInt);
+			ocb_SurfID[i] = auxInt;
+			ocb_SurfType[i] = SURFING_OBJECT;
+		} else if (ocb_SurfType[i] == SURFING_OBJECT && ocb_SurfID[i] != auxInt) {
+			CallLocalFunction("OnPlayerJumpObjectToObject", "iii", i, ocb_SurfID[i], auxInt);
+			ocb_SurfID[i] = auxInt;
+		} else if (ocb_SurfType[i] == SURFING_VEHICLE) {
+			CallLocalFunction("OnPlayerJumpVehicleToObject", "iii", i, ocb_SurfID[i], auxInt);
+			ocb_SurfID[i] = auxInt;
+			ocb_SurfType[i] = SURFING_OBJECT;
+		}
+		return 1;
 	}
+	return 0;
 }
 
 // HOOKS, if applicable
