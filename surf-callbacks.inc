@@ -7,8 +7,8 @@
 // 		If you have y_hooks, simply include this file and everything will work by itself.
 //
 //		If you don't have y_hooks, then, besides from including the file you must:
-//			- Call 'mrksSurf_InitializePlayer(playerid)' at the beggining of OnPlayerConnect
-//			- Call 'mrksSurf_InitializeTimer()' at any point in OnGameModeInit
+//			- Call 'ocbSurf_InitializePlayer(playerid)' at the beggining of OnPlayerConnect
+//			- Call 'ocbSurf_InitializeTimer()' at any point in OnGameModeInit
 //
 // Usage
 //
@@ -25,59 +25,118 @@
 //			vehicle "newvehicleid", without ever touching the ground.
 //
 
+// Function forwarding
 forward OnPlayerSurfVehicle(playerid, vehicleid);
+forward OnPlayerSurfObject(playerid, objectid);
 forward OnPlayerStopSurfingVehicle(playerid, vehicleid);
+forward OnPlayerStopSurfingObject(playerid, objectid);
 forward OnPlayerJumpVehicleToVehicle(playerid, oldvehicleid, newvehicleid);
+forward OnPlayerJumpObjectToObject(playerid, oldobjectid, newobjectid);
+forward OnPlayerJumpVehicleToObject(playerid, vehicleid, objectid);
+forward OnPlayerJumpObjectToVehicle(playerid, objectid, vehicleid);
 
-new mrks_SurfStatus[MAX_PLAYERS];
 
-// timer func
+// Macros
+#define SURFING_NONE			(0)
+#define SURFING_VEHICLE			(1)
+#define SURFING_OBJECT			(2)
 
-forward mrks_CheckSurfers();
-public mrks_CheckSurfers() {
+// Include gvars
+new ocb_SurfID[MAX_PLAYERS];
+new ocb_SurfType[MAX_PLAYERS];
+
+// Functions
+
+/*
+	GetPlayerSurfing
+
+	Receives a player ID and an integer by reference.
+	The reference integer will contain what type of surfing the player is doing.
+	The return value will be the ID of the object or vehicle that the player is surfing.
+*/
+stock GetPlayerSurfing(playerid, &type) {
+	type = ocb_SurfType[playerid];
+	return ocb_SurfID[playerid];
+}
+
+//////////////////////////////////
+// Timer and internal functions //
+//////////////////////////////////
+
+forward ocb_CheckSurfers();
+public ocb_CheckSurfers() {
 	new auxInt;
 	for (new i = 0; i < MAX_PLAYERS; i++) {
 		if (!IsPlayerConnected(i)) continue;
-		auxInt = GetPlayerSurfingVehicleID(i);
-		if (auxInt == INVALID_VEHICLE_ID) {
-			if (mrks_SurfStatus[i] != INVALID_VEHICLE_ID) {
-				CallLocalFunction("OnPlayerStopSurfingVehicle", "ii", i, mrks_SurfStatus[i]);
-				mrks_SurfStatus[i] = INVALID_VEHICLE_ID;
-			}
-		} else {
-			if (mrks_SurfStatus[i] == INVALID_VEHICLE_ID) {
-				CallLocalFunction("OnPlayerSurfVehicle", "ii", i, auxInt);
-				mrks_SurfStatus[i] = auxInt;
-			} else if (mrks_SurfStatus[i] != auxInt) {
-				CallLocalFunction("OnPlayerJumpVehicleToVehicle", "iii", i, mrks_SurfStatus[i], auxInt);
-				mrks_SurfStatus[i] = auxInt;
-			}
+		auxInt = GetPlayerSurfingVehicleID(i, auxInt);
+		if (ocb_HandleVehicleSurfing(i, auxInt)) continue;
+		auxInt = GetPlayerSurfingObjectID(i);
+		if (ocb_HandleObjectSurfing(i, auxInt)) continue;
+		ocb_SurfType[i] = SURFING_NONE;
+	}
+}
+
+/*
+	ocb_HandleVehicleSurfing
+
+	Internal function to handle the case in which a player might be surfing a vehicle.
+	If the player's state changes to surfing it returns 1, causing the timer function to continue and avoid
+	unnecesarily checking for object surf.
+*/
+ocb_HandleVehicleSurfing(i, auxInt) {
+	if (auxInt == INVALID_VEHICLE_ID) {
+		if (ocb_SurfType[i] == SURFING_VEHICLE && ocb_SurfID[i] != INVALID_VEHICLE_ID) {
+			CallLocalFunction("OnPlayerStopSurfingVehicle", "ii", i, ocb_SurfID[i]);
+			ocb_SurfID[i] = INVALID_VEHICLE_ID;
+		}
+	} else {
+		if (ocb_SurfType[i] == SURFING_NONE && ocb_SurfID[i] == INVALID_VEHICLE_ID) {
+			CallLocalFunction("OnPlayerSurfVehicle", "ii", i, auxInt);
+			ocb_SurfID[i] = auxInt;
+			ocb_SurfType[i] = SURFING_VEHICLE;
+			return 1;
+		} else if (ocb_SurfType[i] == SURFING_VEHICLE && ocb_SurfID[i] != auxInt) {
+			CallLocalFunction("OnPlayerJumpVehicleToVehicle", "iii", i, ocb_SurfID[i], auxInt);
+			ocb_SurfID[i] = auxInt;
+			ocb_SurfType[i] = SURFING_VEHICLE;
+			return 1;
+		} else if (ocb_SurfType[i] == SURFING_OBJECT) {
+			CallLocalFunction("OnPlayerJumpObjectToVehicle", "iii", i, ocb_SurfID[i], auxInt);
+			ocb_SurfID[i] = auxInt;
+			ocb_SurfType[i] = SURFING_VEHICLE;
+			return 1;
 		}
 	}
 }
 
+ocb_HandleObjectSurfing(i, auxInt) {
+	if (auxInt == INVALID_OBJECT_ID) {
+		
+	}
+}
+
+// HOOKS, if applicable
+
 #if defined _INC_y_hooks
 
 hook OnPlayerConnect(playerid) {
-	mrks_SurfStatus[playerid] = INVALID_VEHICLE_ID;
+	ocbSurf_InitializePlayer(playerid);
 	return 1;
 }
 
 hook OnGameModeInit() {
-	SetTimer("mrks_CheckSurfers", 1000, true);
-	return 1;
-}
-
-#else
-
-stock mrksSurf_InitializePlayer(playerid) {
-	mrks_SurfStatus[playerid] = INVALID_VEHICLE_ID;
-	return 1;
-}
-
-stock mrksSurf_InitializeTimer() {
-	SetTimer("mrks_CheckSurfers", 1000, true);
+	ocbSurf_InitializeTimer();
 	return 1;
 }
 
 #endif
+
+ocbSurf_InitializePlayer(playerid) {
+	ocb_SurfID[playerid] = INVALID_VEHICLE_ID;
+	return 1;
+}
+
+ocbSurf_InitializeTimer() {
+	SetTimer("ocb_CheckSurfers", 1000, true);
+	return 1;
+}
