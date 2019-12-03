@@ -17,12 +17,30 @@
 // 		OnPlayerSurfVehicle
 //			Called when a player "playerid" starts surfing vehicle "vehicleid".
 //
+// 		OnPlayerSurfObject
+//			Called when a player "playerid" starts surfing object "objectid".
+//
 //		OnPlayerStopSurfingVehicle 
 // 			Called when player "playerid" "stops surfing vehicle "vehicleid".
+//
+//		OnPlayerStopSurfingObject 
+// 			Called when player "playerid" "stops surfing object "objectid".
 //
 //		OnPlayerJumpVehicleToVehicle
 // 			Called when player "playerid" stops surfing vehicle "oldvehicleid" and starts surfing 
 //			vehicle "newvehicleid", without ever touching the ground.
+//
+//		OnPlayerJumpObjectToObject
+// 			Called when player "playerid" stops surfing object "oldobjectid" and starts surfing 
+//			object "newobjectid", without ever touching the ground.
+//
+//		OnPlayerJumpVehicleToObject
+// 			Called when player "playerid" stops surfing vehicle "vehicleid" and starts surfing 
+//			object "objectid", without ever touching the ground.
+//
+//		OnPlayerJumpObjectToVehicle
+// 			Called when player "playerid" stops surfing object "objectid" and starts surfing 
+//			vehicle "vehicleid", without ever touching the ground.
 //
 
 // Function forwarding
@@ -68,7 +86,7 @@ public ocb_CheckSurfers() {
 	new auxInt;
 	for (new i = 0; i < MAX_PLAYERS; i++) {
 		if (!IsPlayerConnected(i)) continue;
-		auxInt = GetPlayerSurfingVehicleID(i, auxInt);
+		auxInt = GetPlayerSurfingVehicleID(i);
 		if (ocb_HandleVehicleSurfing(i, auxInt)) continue;
 		auxInt = GetPlayerSurfingObjectID(i);
 		if (ocb_HandleObjectSurfing(i, auxInt)) continue;
@@ -83,7 +101,7 @@ public ocb_CheckSurfers() {
 	If the player's state changes to surfing it returns 1, causing the timer function to continue and avoid
 	unnecesarily checking for object surf.
 */
-ocb_HandleVehicleSurfing(i, auxInt) {
+static ocb_HandleVehicleSurfing(i, auxInt) {
 	if (auxInt == INVALID_VEHICLE_ID) {
 		if (ocb_SurfType[i] == SURFING_VEHICLE) {
 			CallLocalFunction("OnPlayerStopSurfingVehicle", "ii", i, ocb_SurfID[i]);
@@ -116,7 +134,7 @@ ocb_HandleVehicleSurfing(i, auxInt) {
 	Return 1 if a player is surfing an object, no matter if the state changed or not
 	To avoid setting their surf type to none
 */
-ocb_HandleObjectSurfing(i, auxInt) {
+static ocb_HandleObjectSurfing(i, auxInt) {
 	if (auxInt == INVALID_OBJECT_ID) {
 		if (ocb_SurfType[i] == SURFING_OBJECT) {
 			CallLocalFunction("OnPlayerStopSurfingObject", "ii", i, ocb_SurfID[i]);
