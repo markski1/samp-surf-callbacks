@@ -13,15 +13,7 @@ If you don't have y_hooks, then, besides from including the file you must:
 
 To use, you must define each callback as a public function anywhere in your script. The code within will be run when the callback's given condition is met. They're already forwarded in the include file.
 
-- `OnPlayerSurfVehicle`
-
-		Called when a player "playerid" starts surfing vehicle "vehicleid".
-- `OnPlayerStopSurfingVehicle`
-
-		Called when player "playerid" "stops surfing vehicle "vehicleid".
-- `OnPlayerJumpVehicleToVehicle`
-
-		Called when player "playerid" stops surfing vehicle "oldvehicleid" and starts surfing vehicle "newvehicleid", without ever touching the ground.
+Description and instructions per each callback are in the comments of the .inc itself.
     
 ### Collaborating
 Just make a PR m8
