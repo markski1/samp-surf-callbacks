@@ -60,8 +60,8 @@ forward OnPlayerJumpObjectToVehicle(playerid, objectid, vehicleid);
 #define SURFING_OBJECT			(2)
 
 // Include gvars
-new ocb_SurfID[MAX_PLAYERS];
-new ocb_SurfType[MAX_PLAYERS];
+static ocb_SurfID[MAX_PLAYERS];
+static ocb_SurfType[MAX_PLAYERS];
 
 // Functions
 
@@ -176,6 +176,7 @@ hook OnGameModeInit() {
 
 ocbSurf_InitializePlayer(playerid) {
 	ocb_SurfID[playerid] = INVALID_VEHICLE_ID;
+	ocb_SurfType[playerid] = SURFING_NONE;
 	return 1;
 }
 
