@@ -1,29 +1,12 @@
-//
-// Surf callbacks 0.3 by Markski
-// mrks.cf - Markski#7243 - immarkski@pm.me
-//
-// Installation
-//
-// 		If you have y_hooks, simply include this file after including y_hooks and everything will work by itself.
-//
-//		If you don't have y_hooks, then, besides from including the file you must:
-//			- Call 'ocbSurf_InitializePlayer(playerid)' at the beggining of OnPlayerConnect
-//			- Call 'ocbSurf_InitializeTimer()' at any point in OnGameModeInit
-//
-// Usage
-//
-// 		Define the callbacks as a public function anywhere in your script, they're forwarded here already.
-//
-// 		OnPlayerSurfVehicle
-//			Called when a player "playerid" starts surfing vehicle "vehicleid".
-//
-//		OnPlayerStopSurfingVehicle
-// 			Called when player "playerid" "stops surfing vehicle "vehicleid".
-//
-//		OnPlayerJumpVehicleToVehicle
-// 			Called when player "playerid" stops surfing vehicle "oldvehicleid" and starts surfing
-//			vehicle "newvehicleid", without ever touching the ground.
-//
+/*
+	samp-surf-callbacks 1.0
+
+	mrks.cf | github.com/markski1
+
+	Thanks to:
+		open.mp/docs contributors
+		SACNR
+*/
 
 // Function forwarding
 forward OnPlayerSurfVehicle(playerid, vehicleid);
@@ -81,29 +64,46 @@ static ocb_HandleVehicleSurfing(i, auxInt) {
 	return 0;
 }
 
-// HOOKS, if applicable
-
-#if defined _INC_y_hooks
-
-hook OnPlayerConnect(playerid) {
-	ocbSurf_InitializePlayer(playerid);
-	return 1;
-}
-
-hook OnGameModeInit() {
-	ocbSurf_InitializeTimer();
-	return 1;
-}
-
-#endif
-
-ocbSurf_InitializePlayer(playerid) {
+public OnPlayerConnect(playerid) {
 	ocb_SurfID[playerid] = INVALID_VEHICLE_ID;
 	ocb_SurfType[playerid] = SURFING_NONE;
+
+	#if defined ocbSurf_OnPlayerConnect
+		return ocbSurf_OnPlayerConnect(playerid);
+	#endif
 	return 1;
 }
 
-ocbSurf_InitializeTimer() {
+public OnGameModeInit() {
 	SetTimer("ocb_CheckSurfers", 1000, true);
+
+	#if defined ocbSurf_OnGameModeInit
+		ocbSurf_OnGameModeInit();
+	#endif
 	return 1;
 }
+
+
+#if defined _ALS_OnPlayerConnect
+	#undef OnPlayerConnect
+#else
+	#define _ALS_OnPlayerConnect
+#endif
+
+#define OnPlayerConnect ocbSurf_OnPlayerConnect
+
+#if defined ocbSurf_OnPlayerConnect
+	forward ocbSurf_OnPlayerConnect();
+#endif
+
+#if defined _ALS_OnGameModeInit
+	#undef OnGameModeInit
+#else
+	#define _ALS_OnGameModeInit
+#endif
+
+#define OnGameModeInit ocbSurf_OnGameModeInit
+
+#if defined ocbSurf_OnGameModeInit
+	forward ocbSurf_OnGameModeInit();
+#endif
