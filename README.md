@@ -3,11 +3,7 @@ Callbacks for SA-MP when players start/stop surfing a vehicle, or jump from a ve
 
 ### Install
 
-If you have y_hooks, simply include the .inc file and everything will work as if by magic.
-
-If you don't have y_hooks, then, besides from including the file you must:
-	- Call 'mrksSurf_InitializePlayer(playerid)' at the beggining of OnPlayerConnect
-	- Call 'mrksSurf_InitializeTimer()' at any point in OnGameModeInit
+Simply include surf-callbacks.inc into your script and it'll work as if by magic.
 
 ### Usage
 
